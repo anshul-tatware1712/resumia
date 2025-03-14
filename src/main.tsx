@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import App from "./App.tsx";
+import { Toaster } from "./components/ui/sonner.tsx";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider
@@ -12,6 +13,7 @@ createRoot(document.getElementById("root")!).render(
       disableTransitionOnChange
     >
       <App />
+      <Toaster />
     </ThemeProvider>
   </StrictMode>
 );
