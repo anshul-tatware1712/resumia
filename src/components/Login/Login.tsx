@@ -5,6 +5,8 @@ import { IconBrandFacebook, IconBrandGoogle } from "@tabler/icons-react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import { useLoginMutation } from "@/Api/api";
+import { useNavigate } from "react-router-dom";
 
 interface LoginProps {
   setActive: (active: string) => void;
@@ -32,9 +34,21 @@ const Login: React.FC<LoginProps> = ({ setActive }) => {
     handleSubmit,
     formState: { errors },
   } = form;
-
+  const navigate = useNavigate();
+  const { mutate } = useLoginMutation();
   const onSubmit = (data: LoginData) => {
-    console.log(data);
+    mutate(
+      { email: data.email, password: data.password },
+      {
+        onSuccess: (response) => {
+          console.log("Login successful:", response);
+          navigate("/form");
+        },
+        onError: (err) => {
+          console.error("Login failed:", err.message);
+        },
+      }
+    );
   };
   return (
     <form

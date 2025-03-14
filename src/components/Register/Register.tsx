@@ -6,6 +6,8 @@ import { IconBrandFacebook, IconBrandGoogle } from "@tabler/icons-react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import { useSignupMutation } from "@/Api/api";
+import { useNavigate } from "react-router-dom";
 
 interface RegisterProps {
   setActive: (active: string) => void;
@@ -53,9 +55,23 @@ const Register: React.FC<RegisterProps> = ({ setActive }) => {
     handleSubmit,
     formState: { errors },
   } = form;
+  const navigate = useNavigate();
+
+  const { mutate } = useSignupMutation();
 
   const onSubmit = (data: RegisterData) => {
-    console.log(data);
+    mutate(
+      { name: data.name, email: data.email, password: data.password },
+      {
+        onSuccess: (response) => {
+          console.log("Signup successful:", response);
+          navigate("/register");
+        },
+        onError: (err) => {
+          console.error("Signup failed:", err.message);
+        },
+      }
+    );
   };
 
   return (

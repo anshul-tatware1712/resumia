@@ -5,7 +5,7 @@ const Landing = () => {
   const navigate = useNavigate();
   return (
     <div>
-      <Button onClick={() => navigate("/auth")}>Signup</Button>
+      <Button onClick={() => navigate("/register")}>Signup</Button>
     </div>
   );
 };
