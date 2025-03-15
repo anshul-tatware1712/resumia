@@ -31,11 +31,11 @@ const router = createBrowserRouter([
 ]);
 
 const App = () => {
-  const queryClient = new QueryClient(); 
+  const queryClient = new QueryClient();
   return (
     <QueryClientProvider client={queryClient}>
-    <RouterProvider router={router}></RouterProvider>
-    // </QueryClientProvider>
+      <RouterProvider router={router}></RouterProvider>
+    </QueryClientProvider>
   );
 };
 

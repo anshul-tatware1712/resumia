@@ -16,7 +16,7 @@ const signupRequest = async (data: RegisterData) => {
     const response = await api.post("/auth/register", data);
     return response.data;
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || "Signup failed");
+    throw new Error(error.response.data.message || "Signup failed");
   }
 };
 

@@ -4,40 +4,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { IconBrandFacebook, IconBrandGoogle } from "@tabler/icons-react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
+import { RegisterSchema } from "./Register.schema";
 import { useSignupMutation } from "@/Api/api";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { useState } from "react";
+import SuccessModal from "./SuccessModal/SuccessModal";
+import Spinner from "../Spinner/Spinner";
 
 interface RegisterProps {
   setActive: (active: string) => void;
 }
-
-const schema = yup.object().shape({
-  name: yup.string().required("Full name is required"),
-  email: yup.string().email("Invalid email").required("Email is required"),
-  password: yup
-    .string()
-    .min(6, "Password must be at least 6 characters")
-    .required("Password is required"),
-  confirmPassword: yup
-    .string()
-    .oneOf([yup.ref("password")], "Passwords must match")
-    .required("Confirm password is required"),
-  termsAccepted: yup
-    .boolean()
-    .oneOf([true], "You must accept the terms and conditions"),
-});
 
 interface RegisterData {
   name: string;
@@ -55,7 +33,7 @@ const Register: React.FC<RegisterProps> = ({ setActive }) => {
   } | null>(null);
 
   const form = useForm<RegisterData>({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(RegisterSchema),
     mode: "all",
     defaultValues: {
       name: "",
@@ -69,11 +47,12 @@ const Register: React.FC<RegisterProps> = ({ setActive }) => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    control,
+    formState: { errors, isValid },
     reset,
   } = form;
 
-  const { mutate } = useSignupMutation();
+  const { mutate, isPending } = useSignupMutation();
 
   const onSubmit = (data: RegisterData) => {
     mutate(
@@ -92,15 +71,9 @@ const Register: React.FC<RegisterProps> = ({ setActive }) => {
               err.message ||
               "There was an error creating your account. Please try again. ",
           });
-          reset();
         },
       }
     );
-  };
-
-  const handleLoginRedirect = () => {
-    setIsSuccessModalOpen(false);
-    setActive("login");
   };
 
   return (
@@ -109,6 +82,7 @@ const Register: React.FC<RegisterProps> = ({ setActive }) => {
         className="w-full px-8 h-full py-10 flex flex-col justify-between"
         onSubmit={handleSubmit(onSubmit)}
       >
+        {isPending && <Spinner />}
         <div>
           <div>
             <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-purple-300">
@@ -128,6 +102,7 @@ const Register: React.FC<RegisterProps> = ({ setActive }) => {
                 id="name"
                 type="text"
                 {...register("name")}
+                autoComplete="none"
                 className="bg-purple-900/30 border-purple-500/30 text-purple-100 placeholder:text-purple-300/40"
               />
               {errors.name && (
@@ -144,6 +119,7 @@ const Register: React.FC<RegisterProps> = ({ setActive }) => {
               <Input
                 id="email"
                 type="email"
+                autoComplete="none"
                 {...register("email")}
                 className="bg-purple-900/30 border-purple-500/30 text-purple-100 placeholder:text-purple-300/40"
               />
@@ -161,6 +137,7 @@ const Register: React.FC<RegisterProps> = ({ setActive }) => {
               <Input
                 id="password"
                 type="password"
+                autoSave="off"
                 {...register("password")}
                 className="bg-purple-900/30 border-purple-500/30 text-purple-100"
               />
@@ -188,33 +165,45 @@ const Register: React.FC<RegisterProps> = ({ setActive }) => {
               )}
             </div>
 
-            <div className="flex items-center space-x-2 ">
-              <Checkbox
-                id="termsAccepted"
-                {...register("termsAccepted")}
-                onClick={() =>
-                  form.setValue(
-                    "termsAccepted",
-                    !form.getValues("termsAccepted")
-                  )
-                }
-                className="data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500"
-              />
-              <label
-                htmlFor="termsAccepted"
-                className="text-sm font-medium leading-none text-purple-200"
-              >
-                I accept the{" "}
-                <a href="#" className="text-purple-400 hover:text-purple-300">
-                  terms and conditions
-                </a>
-              </label>
+            <div className="space-y-2 relative">
+              <div className="flex items-center space-x-2">
+                <Controller
+                  name="termsAccepted"
+                  control={control}
+                  render={({ field }) => (
+                    <Checkbox
+                      id="termsAccepted"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      className="data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500"
+                    />
+                  )}
+                />
+                <label
+                  htmlFor="termsAccepted"
+                  className="text-sm font-medium leading-none text-purple-200"
+                >
+                  I accept the{" "}
+                  <a href="#" className="text-purple-400 hover:text-purple-300">
+                    terms and conditions
+                  </a>
+                </label>
+              </div>
+
+              {errors.termsAccepted && (
+                <div className="mt-1 absolute top-3">
+                  <span className="text-red-500 text-sm">
+                    {errors.termsAccepted.message}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
         <div>
           <Button
             type="submit"
+            disabled={!isValid}
             className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-medium py-2 cursor-pointer mt-4"
           >
             Create Account
@@ -265,74 +254,14 @@ const Register: React.FC<RegisterProps> = ({ setActive }) => {
         </div>
       </form>
 
-      <Dialog open={isSuccessModalOpen} onOpenChange={setIsSuccessModalOpen}>
-        <DialogContent className="bg-purple-950 border border-purple-500/50 text-purple-100 rounded-lg shadow-xl max-w-md mx-auto">
-          <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center shadow-lg">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-8 w-8 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
-          </div>
-
-          <DialogHeader className="text-center">
-            <DialogTitle className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-purple-300 mb-2">
-              Registration Successful!
-            </DialogTitle>
-            <DialogDescription className="text-purple-200">
-              {registeredUser && (
-                <div className="space-y-3 py-2">
-                  <p className="text-lg font-medium">
-                    Welcome aboard,{" "}
-                    <span className="text-pink-300">{registeredUser.name}</span>
-                    !
-                  </p>
-                  <div className="bg-purple-900/40 p-3 rounded-md border border-purple-500/20 text-sm">
-                    <p>Your account has been created successfully with:</p>
-                    <p className="mt-2 font-mono bg-purple-900/70 p-2 rounded text-purple-100 overflow-x-auto">
-                      {registeredUser.email}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-purple-500/30 to-transparent my-4"></div>
-
-          <DialogFooter className="flex flex-col sm:flex-row sm:justify-center pt-2">
-            <Button
-              onClick={handleLoginRedirect}
-              className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-medium py-2 px-4 rounded-md transition-all duration-200 shadow-md hover:shadow-lg"
-            >
-              <span className="mr-2">Proceed to Login</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {isSuccessModalOpen && (
+        <SuccessModal
+          registeredUser={registeredUser}
+          setActive={setActive}
+          isSuccessModalOpen={isSuccessModalOpen as boolean}
+          setIsSuccessModalOpen={setIsSuccessModalOpen}
+        />
+      )}
     </>
   );
 };

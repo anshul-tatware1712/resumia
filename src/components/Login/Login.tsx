@@ -7,7 +7,8 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useLoginMutation } from "@/Api/api";
 import { useNavigate } from "react-router-dom";
-
+import { toast } from "sonner";
+import Spinner from "../Spinner/Spinner";
 interface LoginProps {
   setActive: (active: string) => void;
 }
@@ -35,17 +36,24 @@ const Login: React.FC<LoginProps> = ({ setActive }) => {
     formState: { errors },
   } = form;
   const navigate = useNavigate();
-  const { mutate } = useLoginMutation();
+  const { mutate, isPending } = useLoginMutation();
   const onSubmit = (data: LoginData) => {
     mutate(
       { email: data.email, password: data.password },
       {
         onSuccess: (response) => {
           console.log("Login successful:", response);
+          toast.success("Login Successful", {
+            description: "Welcome back!",
+          });
+
           navigate("/form");
         },
         onError: (err) => {
           console.error("Login failed:", err.message);
+          toast.error("Login Failed", {
+            description: err.message || "Please try again. ",
+          });
         },
       }
     );
@@ -55,6 +63,8 @@ const Login: React.FC<LoginProps> = ({ setActive }) => {
       className="w-full px-8 h-full py-10 flex flex-col justify-between"
       onSubmit={handleSubmit(onSubmit)}
     >
+      {isPending && <Spinner />}
+
       <div className="space-y-6">
         <div>
           <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-purple-300">
