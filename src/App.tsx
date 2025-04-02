@@ -4,6 +4,7 @@ import { AuthPage } from "./Pages/AuthPage/AuthPage";
 import Landing from "./Pages/Landing/Landing";
 import Resumeia from "./Pages/Resumeai/Resumeia";
 import Mainlayout from "./components/Layout/Mainlayout";
+import BuildIt from "./Pages/Buildit/BuildIt";
 
 const router = createBrowserRouter([
   {
@@ -25,6 +26,10 @@ const router = createBrowserRouter([
       {
         path: "/form",
         element: <Resumeia />,
+      },
+      {
+        path: "/build",
+        element: <BuildIt />,
       },
     ],
   },
